@@ -3,35 +3,60 @@ import SearchBar from './SearchBar';
 import WeatherInfo from './WeatherInfo';
 import Loading from './Loading';
 import Error from './Error';
-import useFetchWeather from './useFetchWeather';
+import Favourites from './Favourites';
+import useFetchWeather from '../hooks/useFetchWeather';
 
 const WeatherApp = () => {
-    const [city, setCity] = useState('');
-    const [weatherData, setWeatherData] = useState(null);
+  const [cityOrCoords, setCityOrCoords] = useState('');
+  const [favourites, setFavourites] = useState(() => JSON.parse(localStorage.getItem('favourites')) || []);
+  const { data, isLoading, error } = useFetchWeather(cityOrCoords);
 
-    const handleCityChange = (newCity) => {
-        setCity(newCity);
-    };  
+  useEffect(() => {
+    localStorage.setItem('favourites', JSON.stringify(favourites));
+  }, [favourites]);
 
-    const { data, isLoading, error } = useFetchWeather(city);
+  const handleCityChange = (newCity) => {
+    setCityOrCoords(newCity);
+  };
 
-    useEffect(() => {
-        if (data) {
-            setWeatherData(data);
-        }
-    }, [data]);
+  const handleAddFavourite = () => {
+    if (typeof cityOrCoords === 'string' && !favourites.includes(cityOrCoords)) {
+      setFavourites([...favourites, cityOrCoords]);
+    }
+  };
 
+  const handleDeleteFavourite = (favCity) => {
+    setFavourites(favourites.filter((city) => city !== favCity));
+  };
 
+  const handleSelectFavourite = (favCity) => {
+    setCityOrCoords(favCity);
+  };
 
-    return (
-        <div>
-            <h1>Weather App</h1>
-            <SearchBar onCityChange={handleCityChange} />
-            {isLoading && <Loading />}
-            {error && <Error message={error} />}
-            {weatherData && <WeatherInfo data={weatherData} />}
-        </div>      
-    )
-}
+  const handleUseCurrentLocation = () => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setCityOrCoords({ lat: latitude, lon: longitude });
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+      }
+    );
+  };
 
-export default WeatherApp
+  return (
+    <div>
+      <h1>Weather App</h1>
+      <button onClick={handleUseCurrentLocation}>Use My Location</button>
+      <SearchBar onCityChange={handleCityChange} />
+      <button onClick={handleAddFavourite}>Add to Favourites</button>
+      <Favourites favourites={favourites} onSelect={handleSelectFavourite} onDelete={handleDeleteFavourite} />
+      {isLoading && <Loading />}
+      {error && <Error message={error} />}
+      {data && <WeatherInfo data={data} />}
+    </div>
+  );
+};
+
+export default WeatherApp;

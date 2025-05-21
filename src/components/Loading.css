@@ -1,0 +1,27 @@
+.loading {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #0077ff;
+  margin: 20px 0;
+  animation: pulse 1s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+/* Optional responsiveness tweak */
+@media (max-width: 600px) {
+  .loading {
+    font-size: 1.2rem;
+  }
+}
